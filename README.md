@@ -1,36 +1,133 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MediQueue
 
-## Getting Started
+MediQueue is a modern outpatient queue management system designed to reduce physical waiting room congestion and improve patient flow.
 
-First, run the development server:
+It provides:
+
+- a patient-facing check-in and live queue tracker
+- a staff dashboard for real-time queue operations
+- automated email alerts when patients are near the front of the queue
+
+## Why MediQueue
+
+Traditional OPD queues often require patients to wait onsite for long periods with little visibility into progress. MediQueue shifts this experience to a live digital workflow where patients can monitor queue movement remotely and arrive closer to consultation time.
+
+## Core Features
+
+- **Self check-in kiosk flow** for new patient registration
+- **Live queue tracking** by 6-character token code
+- **Staff control dashboard** for:
+  - doctor selection
+  - doctor status updates (available, busy, on break)
+  - waiting list management (call, skip, complete)
+  - quick desk walk-in check-in
+- **Dynamic wait estimates** based on doctor consultation pace
+- **Email notifications** sent when a patient is close to being called
+- **Printable receipts + QR code** for quick queue lookup
+
+## Tech Stack
+
+- **Frontend:** Next.js (App Router), React, TypeScript, Tailwind CSS
+- **Backend / Realtime DB:** Convex
+- **Auth:** Clerk (configured for staff sign-in routes)
+- **Email Provider:** Resend
+- **Icons/UI:** Lucide React
+
+## Application Routes
+
+- `/` - landing page + token-based queue lookup
+- `/checkin` - patient self check-in
+- `/q/[code]` - patient live status page
+- `/staff/dashboard` - staff operations dashboard
+- `/sign-in` and `/sign-up` - authentication routes
+
+## Quick Start
+
+### 1) Clone and install dependencies
+
+```bash
+git clone https://github.com/Abivarman123/mediqueue.git
+cd mediqueue
+npm install
+```
+
+### 2) Configure environment variables
+
+Create a local environment file (for example `.env.local`) and copy values from `.env.example`:
+
+```bash
+CONVEX_DEPLOYMENT=
+NEXT_PUBLIC_CONVEX_URL=
+NEXT_PUBLIC_CONVEX_SITE_URL=
+RESEND_API_KEY=
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/staff/dashboard
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/staff/dashboard
+```
+
+### 3) Start Convex and the app
+
+Run Convex in one terminal:
+
+```bash
+npx convex dev
+```
+
+Run Next.js in another terminal:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Available Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` - start Next.js development server
+- `npm run build` - production build
+- `npm run start` - run production server
+- `npm run lint` - run ESLint
 
-## Learn More
+## Email Alert Behavior
 
-To learn more about Next.js, take a look at the following resources:
+- When `RESEND_API_KEY` is configured, alerts are sent via Resend.
+- When it is not configured, the app logs a mock "email sent" message and still marks notifications as sent in the database for development flow testing.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+MediQueue/
+  src/
+    app/
+      page.tsx                 # Landing + token lookup
+      checkin/page.tsx         # Patient check-in
+      q/[code]/page.tsx        # Live queue status by token
+      staff/dashboard/page.tsx # Staff control dashboard
+  convex/
+    doctors.ts                 # Doctor queries/mutations
+    queues.ts                  # Queue logic
+    notifications.ts           # Email alert action
+    seed.ts                    # Demo data seeding
+  .env.example
+  LICENSE
+```
 
-## Deploy on Vercel
+## Deployment Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Deploy the frontend on Vercel (or any Next.js-compatible host).
+- Configure all required environment variables in your deployment platform.
+- Ensure Convex deployment values (`CONVEX_DEPLOYMENT`, `NEXT_PUBLIC_CONVEX_URL`) match the target environment.
+- For production email delivery, set a valid `RESEND_API_KEY` and verified sender domain.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contributing
+
+Contributions are welcome. For substantial changes, please open an issue first to discuss scope and approach.
+
+## License
+
+This project is licensed under the **MIT License**.
+
+See [LICENSE](./LICENSE) for full text.
