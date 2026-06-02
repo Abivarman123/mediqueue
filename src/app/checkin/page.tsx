@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { QRCodeSVG } from "qrcode.react";
@@ -72,6 +72,7 @@ export default function CheckInKiosk() {
   const [patientPhone, setPatientPhone] = useState("");
   const [patientEmail, setPatientEmail] = useState("");
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
+  const [selectedQueueId, setSelectedQueueId] = useState<any>(null);
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,6 +90,33 @@ export default function CheckInKiosk() {
     if (departmentFilter === "all") return doctors;
     return doctors.filter((d) => d.departmentName === departmentFilter);
   }, [doctors, departmentFilter]);
+
+  useEffect(() => {
+    if (!selectedDoctorId) {
+      setSelectedQueueId(null);
+      return;
+    }
+
+    const loadQueue = async () => {
+      try {
+        const queueId = await getOrCreateQueue({
+          doctorId: selectedDoctorId as any,
+          date: todayStr,
+        });
+        setSelectedQueueId(queueId);
+      } catch (err) {
+        console.error("Failed to load queue for selected doctor:", err);
+        setSelectedQueueId(null);
+      }
+    };
+
+    void loadQueue();
+  }, [selectedDoctorId, getOrCreateQueue, todayStr]);
+
+  const selectedQueueStatus = useQuery(
+    api.queues.getQueueStatus,
+    selectedQueueId ? { queueId: selectedQueueId } : "skip"
+  );
 
   const handleSeed = async () => {
     setIsSeeding(true);
@@ -124,13 +152,16 @@ export default function CheckInKiosk() {
     if (!patientPhone.trim()) return setErrorMsg("Please enter a mobile number.");
     if (!selectedDoctorId) return setErrorMsg("Please select a doctor.");
     if (!agreedToTerms) return setErrorMsg("Please confirm the notice.");
+    if (selectedQueueStatus && !selectedQueueStatus.isOpen) {
+      return setErrorMsg("Queue registration is currently closed for this doctor.");
+    }
 
     setIsSubmitting(true);
     setErrorMsg("");
     const fullName = `${trimmedLast}, ${trimmedFirst}`;
 
     try {
-      const queueId = await getOrCreateQueue({
+      const queueId = selectedQueueId ?? await getOrCreateQueue({
         doctorId: selectedDoctorId as any,
         date: todayStr,
       });
@@ -168,7 +199,12 @@ export default function CheckInKiosk() {
       resetForm();
     } catch (err: unknown) {
       console.error(err);
-      setErrorMsg(err instanceof Error ? err.message : "Registration failed. Please try again.");
+      const message = err instanceof Error ? err.message : "Registration failed. Please try again.";
+      if (message.includes("Queue is currently closed")) {
+        setErrorMsg("Queue registration is currently closed for this doctor.");
+      } else {
+        setErrorMsg(message);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -199,10 +235,12 @@ export default function CheckInKiosk() {
       <main className="flex-grow max-w-4xl mx-auto px-4 py-8 w-full flex items-center justify-center">
         {receipt ? (
           <div className="w-full max-w-lg bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden animate-slide-in print-receipt">
-            <div className="bg-teal-700 text-white px-6 py-5 text-center">
-              <UserCheck className="w-10 h-10 mx-auto mb-2 opacity-90" />
-              <h2 className="text-xl font-black tracking-tight">Appointment Checked In</h2>
-              <p className="text-teal-100 text-xs mt-1 font-medium">{formatDateLong(receipt.visitDate)} · {formatTime(receipt.checkInTime)}</p>
+            <div className="bg-teal-50 border-b border-teal-200 px-6 py-5 text-center">
+              <UserCheck className="w-10 h-10 mx-auto mb-2 text-teal-700" aria-hidden />
+              <h2 className="text-xl font-black tracking-tight text-slate-900">Appointment Checked In</h2>
+              <p className="text-sm text-slate-600 mt-1 font-semibold">
+                {formatDateLong(receipt.visitDate)} · {formatTime(receipt.checkInTime)}
+              </p>
             </div>
             <div className="p-6 flex flex-col gap-5">
               <div className="grid grid-cols-2 gap-3 text-left">
@@ -307,16 +345,16 @@ export default function CheckInKiosk() {
                       1. Patient information
                     </legend>
                     <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5"><label className="text-xs font-bold text-slate-500">First name *</label><input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} required /></div>
-                      <div className="flex flex-col gap-1.5"><label className="text-xs font-bold text-slate-500">Last name *</label><input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} required /></div>
-                      <div className="flex flex-col gap-1.5"><label className="text-xs font-bold text-slate-500">Date of birth *</label><input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className={inputClass} required max={todayStr} /></div>
+                      <div className="flex flex-col gap-1.5"><label className="text-xs font-bold text-slate-500">First name *</label><input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} placeholder="e.g. John" required /></div>
+                      <div className="flex flex-col gap-1.5"><label className="text-xs font-bold text-slate-500">Last name *</label><input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} placeholder="e.g. Doe" required /></div>
+                      <div className="flex flex-col gap-1.5"><label className="text-xs font-bold text-slate-500">Date of birth *</label><input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className={inputClass} placeholder="YYYY-MM-DD" required max={todayStr} /></div>
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-500">Mobile phone *</label>
-                        <div className="relative"><Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input type="tel" value={patientPhone} onChange={(e) => setPatientPhone(e.target.value)} className={`${inputClass} pl-10`} required /></div>
+                        <div className="relative"><Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input type="tel" value={patientPhone} onChange={(e) => setPatientPhone(e.target.value)} className={`${inputClass} pl-10`} placeholder="e.g. +94 0758187300" required /></div>
                       </div>
                       <div className="flex flex-col gap-1.5 sm:col-span-2">
                         <label className="text-xs font-bold text-slate-500">Email (optional)</label>
-                        <div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input type="email" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} className={`${inputClass} pl-10`} /></div>
+                        <div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input type="email" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} className={`${inputClass} pl-10`} placeholder="e.g. patient@example.com" /></div>
                       </div>
                     </div>
                   </fieldset>
@@ -355,7 +393,14 @@ export default function CheckInKiosk() {
 
                   {errorMsg && <p className="text-xs text-rose-600 font-semibold flex items-center gap-1.5 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2"><AlertCircle className="w-4 h-4 shrink-0" />{errorMsg}</p>}
 
-                  <button type="submit" disabled={isSubmitting} className="w-full bg-teal-600 hover:bg-teal-700 text-white font-extrabold py-4 rounded-xl transition shadow-lg shadow-teal-100 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-base">
+                  {selectedQueueStatus && !selectedQueueStatus.isOpen && (
+                    <p className="text-xs text-amber-700 font-semibold flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      Queue registration is closed for the selected doctor.
+                    </p>
+                  )}
+
+                  <button type="submit" disabled={isSubmitting || (selectedQueueStatus ? !selectedQueueStatus.isOpen : false)} className="w-full bg-teal-600 hover:bg-teal-700 text-white font-extrabold py-4 rounded-xl transition shadow-lg shadow-teal-100 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-base">
                     {isSubmitting ? "Registering appointment…" : <><CheckCircle2 className="w-5 h-5" />Complete check-in & get confirmation</>}
                     <ChevronRight className="w-5 h-5" />
                   </button>

@@ -241,6 +241,21 @@ export const getQueueEntries = query({
   },
 });
 
+// Staff query: Read queue open/closed status
+export const getQueueStatus = query({
+  args: { queueId: v.id("queues") },
+  handler: async (ctx, args) => {
+    const queue = await ctx.db.get(args.queueId);
+    if (!queue) return null;
+
+    return {
+      id: queue._id,
+      date: queue.date,
+      isOpen: queue.isOpen,
+    };
+  },
+});
+
 // Update patient status in queue (Staff mutations)
 export const updateEntryStatus = mutation({
   args: {

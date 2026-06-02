@@ -78,7 +78,7 @@ export default function PatientQueueCard() {
   }
 
   // Token not found state
-  if (statusData.error) {
+  if (statusData.error || !statusData.entry) {
     return (
       <div className="flex flex-col min-h-screen bg-slate-50 items-center justify-center p-4">
         <div className="bg-white border border-slate-200 shadow-xl rounded-2xl p-8 max-w-md w-full flex flex-col items-center gap-6 text-center animate-slide-in">
@@ -113,7 +113,7 @@ export default function PatientQueueCard() {
     );
   }
 
-  const { entry, doctor, queue, liveStats } = statusData;
+  const { entry, doctor, liveStats } = statusData;
   const isWaiting = entry.status === "waiting";
   const isCalled = entry.status === "called";
   const isArrived = entry.status === "arrived";
@@ -268,7 +268,7 @@ export default function PatientQueueCard() {
                   Head to the cafeteria or grab a coffee. We'll drop a clinic notification straight into your email inbox when you are only <strong>2 patients away</strong>!
                 </p>
 
-                {emailSaved || entry.emailNotificationSent || statusData.entry.emailNotificationSent ? (
+                {emailSaved || entry.emailNotificationSent ? (
                   <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-center gap-2 text-emerald-800">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                     <span className="text-xs font-bold">Alert configured! Check your inbox when you're 2 away.</span>

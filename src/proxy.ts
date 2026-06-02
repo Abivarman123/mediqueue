@@ -4,7 +4,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // We protect the staff console and admin dashboard
 const isProtectedRoute = createRouteMatcher([
   "/staff/dashboard(.*)",
-  "/admin(.*)"
+  "/admin(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

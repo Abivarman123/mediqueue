@@ -40,6 +40,7 @@ export default function StaffDashboard() {
   const [newPatientName, setNewPatientName] = useState("");
   const [newPatientEmail, setNewPatientEmail] = useState("");
   const [addLoading, setAddLoading] = useState(false);
+  const [walkInError, setWalkInError] = useState("");
 
   const todayStr = new Date().toISOString().split("T")[0];
   const activeDoctor = doctors?.find((d) => d._id === selectedDoctorId);
@@ -61,6 +62,10 @@ export default function StaffDashboard() {
 
   const entries = useQuery(
     api.queues.getQueueEntries,
+    activeQueueId ? { queueId: activeQueueId } : "skip"
+  );
+  const queueStatus = useQuery(
+    api.queues.getQueueStatus,
     activeQueueId ? { queueId: activeQueueId } : "skip"
   );
 
@@ -106,6 +111,12 @@ export default function StaffDashboard() {
   const handleAddWalkIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPatientName.trim() || !activeQueueId) return;
+    if (queueStatus && !queueStatus.isOpen) {
+      setWalkInError("Queue registration is closed. Turn it on to add walk-ins.");
+      return;
+    }
+
+    setWalkInError("");
     setAddLoading(true);
     try {
       await checkInMutation({
@@ -115,9 +126,14 @@ export default function StaffDashboard() {
       });
       setNewPatientName("");
       setNewPatientEmail("");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      alert("Failed to add patient.");
+      const message = err instanceof Error ? err.message : "Failed to add patient.";
+      if (message.includes("Queue is currently closed")) {
+        setWalkInError("Queue registration is closed. Turn it on to add walk-ins.");
+      } else {
+        setWalkInError("Failed to add patient. Please try again.");
+      }
     } finally {
       setAddLoading(false);
     }
@@ -292,10 +308,24 @@ export default function StaffDashboard() {
                   <span className="text-[10px] text-slate-400">Allow walk-ins to scan QR codes.</span>
                 </div>
                 <button
-                  onClick={() => toggleQueueOpen({ queueId: activeQueueId, isOpen: !entries?.[0]?.queueId ? true : !(entries ?? []).some(e => e.status === "waiting") })}
-                  className="w-12 h-6 rounded-full p-1 transition-colors duration-200 cursor-pointer bg-teal-600"
+                  type="button"
+                  disabled={!activeQueueId || !queueStatus}
+                  onClick={() => {
+                    if (!activeQueueId || !queueStatus) return;
+                    void toggleQueueOpen({
+                      queueId: activeQueueId,
+                      isOpen: !queueStatus.isOpen,
+                    });
+                  }}
+                  className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 cursor-pointer ${
+                    queueStatus?.isOpen ? "bg-teal-600" : "bg-slate-300"
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  <span className="w-4 h-4 rounded-full bg-white block translate-x-6" />
+                  <span
+                    className={`w-4 h-4 rounded-full bg-white block transition-transform duration-200 ${
+                      queueStatus?.isOpen ? "translate-x-6" : "translate-x-0"
+                    }`}
+                  />
                 </button>
               </div>
             </div>
@@ -310,6 +340,16 @@ export default function StaffDashboard() {
               </div>
 
               <form onSubmit={handleAddWalkIn} className="flex flex-col gap-3">
+                {queueStatus && !queueStatus.isOpen && (
+                  <p className="text-[11px] text-amber-700 font-semibold bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    Queue registration is currently closed for this doctor.
+                  </p>
+                )}
+                {walkInError && (
+                  <p className="text-[11px] text-rose-600 font-semibold bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
+                    {walkInError}
+                  </p>
+                )}
                 <input
                   type="text"
                   value={newPatientName}
@@ -330,7 +370,7 @@ export default function StaffDashboard() {
                 </div>
                 <button
                   type="submit"
-                  disabled={addLoading}
+                  disabled={addLoading || (queueStatus ? !queueStatus.isOpen : false)}
                   className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl transition text-xs flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
                 >
                   <Plus className="w-4 h-4" />
