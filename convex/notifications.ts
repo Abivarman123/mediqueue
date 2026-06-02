@@ -1,6 +1,7 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import { queueTrackingUrl } from "./appUrl";
 
 export const sendQueueAlertEmail = action({
   args: {
@@ -15,6 +16,7 @@ export const sendQueueAlertEmail = action({
   handler: async (ctx, args) => {
     const apiKey = process.env.RESEND_API_KEY;
 
+    const trackingUrl = queueTrackingUrl(args.tokenCode);
     const emailSubject = `⏰ You're up soon! MediQueue Alert: Position #${args.position}`;
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;">
@@ -49,7 +51,7 @@ export const sendQueueAlertEmail = action({
 
         <p style="font-size: 14px; color: #64748b; line-height: 1.5; text-align: center; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
           To track your live status in real time, keep the following link open: <br/>
-          <a href="https://mediqueue.vercel.app/q/${args.tokenCode}" style="color: #0d9488; text-decoration: underline; font-weight: bold; display: inline-block; margin-top: 5px;">
+          <a href="${trackingUrl}" style="color: #0d9488; text-decoration: underline; font-weight: bold; display: inline-block; margin-top: 5px;">
             View Real-time Position Card
           </a>
         </p>
@@ -65,6 +67,7 @@ export const sendQueueAlertEmail = action({
       console.log(`[MOCK EMAIL SENT TO: ${args.patientEmail}]`);
       console.log(`Subject: ${emailSubject}`);
       console.log(`Body outline: Patients ahead = ${args.position - 1}, Doctor = ${args.doctorName}, Code = ${args.tokenCode}`);
+      console.log(`Tracking URL: ${trackingUrl}`);
       console.log("----------------------------------------");
       
       // Mark as notified in database!

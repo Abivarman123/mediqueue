@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as appUrl from "../appUrl.js";
 import type * as departments from "../departments.js";
 import type * as doctors from "../doctors.js";
 import type * as notifications from "../notifications.js";
@@ -21,6 +22,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  appUrl: typeof appUrl;
   departments: typeof departments;
   doctors: typeof doctors;
   notifications: typeof notifications;

@@ -117,9 +117,14 @@ MediQueue/
 
 ## Deployment Notes
 
+Production app: [https://mediqueuesl.vercel.app](https://mediqueuesl.vercel.app)
+
 - Deploy the frontend on Vercel (or any Next.js-compatible host).
 - Configure all required environment variables in your deployment platform.
 - Ensure Convex deployment values (`CONVEX_DEPLOYMENT`, `NEXT_PUBLIC_CONVEX_URL`) match the target environment.
+- Set `APP_URL` on your Convex deployment so email alert links point at the live site:
+  `npx convex env set APP_URL https://mediqueuesl.vercel.app`
+- In the [Clerk Dashboard](https://dashboard.clerk.com), add `https://mediqueuesl.vercel.app` under **Domains** (and keep `http://localhost:3000` for local dev).
 - For production email delivery, set a valid `RESEND_API_KEY` and verified sender domain.
 
 ## Contributing
