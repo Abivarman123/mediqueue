@@ -87,9 +87,13 @@ export default function StaffDashboard() {
     const waitingPatients = entries
       .filter((e) => e.status === "waiting")
       .sort((a, b) => a.position - b.position);
-    const nextPatientsToNotify = waitingPatients.slice(0, 2);
+    const nextPatientsToNotify = waitingPatients.slice(0, 3);
     nextPatientsToNotify.forEach(async (patient, idx) => {
-      const currentPos = idx + 1;
+      const activeAhead = entries.filter((e) => ["in_consultation", "called", "arrived"].includes(e.status)).length;
+      const patientsAhead = activeAhead + idx;
+      const currentPos = patientsAhead + 1;
+      const estimatedWaitMinutes = Math.max(0, patientsAhead * (activeDoctor.avgConsultMinutes || 10));
+
       if (patient.patientEmail && !patient.emailNotificationSent) {
         try {
           await sendEmailAlertAction({
@@ -100,6 +104,7 @@ export default function StaffDashboard() {
             doctorName: activeDoctor.name,
             room: activeDoctor.room,
             position: currentPos,
+            estimatedWaitMinutes: estimatedWaitMinutes,
           });
         } catch (err) {
           console.error("Failed to run sendEmailAlertAction:", err);

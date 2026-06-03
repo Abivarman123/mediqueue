@@ -12,6 +12,7 @@ export const sendQueueAlertEmail = action({
     doctorName: v.string(),
     room: v.string(),
     position: v.float64(),
+    estimatedWaitMinutes: v.float64(),
   },
   handler: async (ctx, args) => {
     const apiKey = process.env.RESEND_API_KEY;
@@ -31,6 +32,9 @@ export const sendQueueAlertEmail = action({
           <h3 style="margin: 0 0 5px 0; color: #0369a1; font-size: 16px;">Time to head back to the clinic!</h3>
           <p style="margin: 0; color: #0c4a6e; font-size: 15px;">
             You are currently <strong>#${args.position}</strong> in the queue. There are only ${args.position - 1} patient(s) ahead of you.
+          </p>
+          <p style="margin: 8px 0 0 0; color: #0369a1; font-size: 14px; font-weight: bold;">
+            Estimated wait time: ~${args.estimatedWaitMinutes} minutes.
           </p>
         </div>
 
@@ -66,7 +70,7 @@ export const sendQueueAlertEmail = action({
       console.log("----------------------------------------");
       console.log(`[MOCK EMAIL SENT TO: ${args.patientEmail}]`);
       console.log(`Subject: ${emailSubject}`);
-      console.log(`Body outline: Patients ahead = ${args.position - 1}, Doctor = ${args.doctorName}, Code = ${args.tokenCode}`);
+      console.log(`Body outline: Patients ahead = ${args.position - 1}, Estimated wait = ~${args.estimatedWaitMinutes} min, Doctor = ${args.doctorName}, Code = ${args.tokenCode}`);
       console.log(`Tracking URL: ${trackingUrl}`);
       console.log("----------------------------------------");
       
