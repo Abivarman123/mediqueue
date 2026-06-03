@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
+import type { Id } from "../../../../convex/_generated/dataModel";
 import { api } from "../../../../convex/_generated/api";
 import { 
   Activity, 
@@ -34,9 +35,14 @@ export default function StaffDashboard() {
   const sendEmailAlertAction = useAction(api.notifications.sendQueueAlertEmail);
 
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
-  const [activeQueueId, setActiveQueueId] = useState<any>(null);
+  const [activeQueueId, setActiveQueueId] = useState<Id<"queues"> | null>(null);
   const [isSeeding, setIsSeeding] = useState(false);
-  
+  const [seedToast, setSeedToast] = useState("");
+
+  // Tracks entry IDs that have already had an email dispatch in this browser session
+  // so a Convex subscription re-render cannot fire duplicate emails.
+  const dispatchedEmailsRef = useRef<Set<string>>(new Set());
+
   const [newPatientName, setNewPatientName] = useState("");
   const [newPatientEmail, setNewPatientEmail] = useState("");
   const [addLoading, setAddLoading] = useState(false);
@@ -49,16 +55,16 @@ export default function StaffDashboard() {
     if (selectedDoctorId) {
       const loadQueue = async () => {
         const qId = await getOrCreateQueue({
-          doctorId: selectedDoctorId as any,
+          doctorId: selectedDoctorId as Id<"doctors">,
           date: todayStr,
         });
         setActiveQueueId(qId);
       };
-      loadQueue();
+      void loadQueue();
     } else {
       setActiveQueueId(null);
     }
-  }, [selectedDoctorId]);
+  }, [selectedDoctorId, getOrCreateQueue, todayStr]);
 
   const entries = useQuery(
     api.queues.getQueueEntries,
@@ -71,14 +77,16 @@ export default function StaffDashboard() {
 
   const handleSeed = async () => {
     setIsSeeding(true);
+    setSeedToast("");
     try {
       const result = await seedDatabase();
-      alert(result.message);
+      setSeedToast(result.message);
     } catch (err) {
       console.error(err);
-      alert("Seeding failed.");
+      setSeedToast("Seeding failed. Check console for details.");
     } finally {
       setIsSeeding(false);
+      setTimeout(() => setSeedToast(""), 5000);
     }
   };
 
@@ -87,14 +95,25 @@ export default function StaffDashboard() {
     const waitingPatients = entries
       .filter((e) => e.status === "waiting")
       .sort((a, b) => a.position - b.position);
+    // Alert the first 3 waiting patients whose positions are ≤3
     const nextPatientsToNotify = waitingPatients.slice(0, 3);
+    const activeAhead = entries.filter((e) =>
+      ["in_consultation", "called", "arrived"].includes(e.status)
+    ).length;
+
     nextPatientsToNotify.forEach(async (patient, idx) => {
-      const activeAhead = entries.filter((e) => ["in_consultation", "called", "arrived"].includes(e.status)).length;
       const patientsAhead = activeAhead + idx;
       const currentPos = patientsAhead + 1;
-      const estimatedWaitMinutes = Math.max(0, patientsAhead * (activeDoctor.avgConsultMinutes || 10));
+      const estimatedWaitMinutes = Math.max(
+        0,
+        patientsAhead * (activeDoctor.avgConsultMinutes || 10)
+      );
 
-      if (patient.patientEmail && !patient.emailNotificationSent) {
+      // Double-guard: skip if already dispatched in this session OR DB flag already set
+      const alreadyDispatched = dispatchedEmailsRef.current.has(patient._id);
+      if (patient.patientEmail && !patient.emailNotificationSent && !alreadyDispatched) {
+        // Mark locally BEFORE the async call so rapid re-renders can't double-fire
+        dispatchedEmailsRef.current.add(patient._id);
         try {
           await sendEmailAlertAction({
             entryId: patient._id,
@@ -104,14 +123,16 @@ export default function StaffDashboard() {
             doctorName: activeDoctor.name,
             room: activeDoctor.room,
             position: currentPos,
-            estimatedWaitMinutes: estimatedWaitMinutes,
+            estimatedWaitMinutes,
           });
         } catch (err) {
-          console.error("Failed to run sendEmailAlertAction:", err);
+          // Remove from guard set on failure so it can be retried next cycle
+          dispatchedEmailsRef.current.delete(patient._id);
+          console.error("Failed to send queue alert email:", err);
         }
       }
     });
-  }, [entries, activeDoctor]);
+  }, [entries, activeDoctor, sendEmailAlertAction]);
 
   const handleAddWalkIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,6 +206,16 @@ export default function StaffDashboard() {
           </div>
         </div>
       </header>
+
+      {/* Seed feedback toast */}
+      {seedToast && (
+        <div className="max-w-6xl mx-auto px-4 pt-4 w-full animate-fade-in">
+          <div className="bg-teal-900 text-teal-100 text-xs font-semibold px-4 py-3 rounded-xl flex items-center justify-between gap-4">
+            <span>{seedToast}</span>
+            <button onClick={() => setSeedToast("")} className="text-teal-300 hover:text-white transition font-bold text-base leading-none cursor-pointer">×</button>
+          </div>
+        </div>
+      )}
 
       <main className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full grid md:grid-cols-12 gap-8 items-start">
         
@@ -328,7 +359,7 @@ export default function StaffDashboard() {
                 >
                   <span
                     className={`w-4 h-4 rounded-full bg-white block transition-transform duration-200 ${
-                      queueStatus?.isOpen ? "translate-x-6" : "translate-x-0"
+                      queueStatus?.isOpen ? "translate-x-5" : "translate-x-0"
                     }`}
                   />
                 </button>
@@ -481,6 +512,42 @@ export default function StaffDashboard() {
                         Start Consult
                       </button>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Arrived Patients — physically at the room but not yet started */}
+              {arrivedPatients.length > 0 && (
+                <div className="bg-white border border-indigo-100 shadow-sm rounded-2xl p-5 flex flex-col gap-3">
+                  <span className="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-bold uppercase block w-fit">
+                    Arrived at Room ({arrivedPatients.length})
+                  </span>
+                  <div className="flex flex-col gap-2">
+                    {arrivedPatients.map((patient) => (
+                      <div key={patient._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-indigo-50/50 border border-indigo-100 p-3 rounded-xl">
+                        <div>
+                          <h4 className="font-extrabold text-slate-800 text-sm">{patient.patientName}</h4>
+                          <span className="text-[10px] text-slate-500 font-mono">{patient.tokenCode}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => updateStatus({ entryId: patient._id, status: "skipped" })}
+                            className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2 px-3 rounded-xl transition text-xs flex items-center gap-1 cursor-pointer"
+                          >
+                            <UserMinus className="w-3.5 h-3.5" />
+                            Skip
+                          </button>
+                          <button
+                            disabled={!!inConsultation}
+                            onClick={() => updateStatus({ entryId: patient._id, status: "in_consultation" })}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-xl transition text-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                          >
+                            <Play className="w-3.5 h-3.5" />
+                            Start Consult
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

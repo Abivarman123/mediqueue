@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Activity,
@@ -48,7 +49,7 @@ type Receipt = {
   patientName: string;
   dateOfBirth: string;
   patientPhone: string;
-  patientEmail: string;
+  patientEmail?: string;  // optional — patient may not provide email
   doctorFixedTime: string;
   doctorName: string;
   departmentName: string;
@@ -72,12 +73,13 @@ export default function CheckInKiosk() {
   const [patientPhone, setPatientPhone] = useState("");
   const [patientEmail, setPatientEmail] = useState("");
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
-  const [selectedQueueId, setSelectedQueueId] = useState<any>(null);
+  const [selectedQueueId, setSelectedQueueId] = useState<Id<"queues"> | null>(null);
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [isSeeding, setIsSeeding] = useState(false);
+  const [seedToast, setSeedToast] = useState("");
   const [receipt, setReceipt] = useState<Receipt | null>(null);
 
   const departments = useMemo(() => {
@@ -100,7 +102,7 @@ export default function CheckInKiosk() {
     const loadQueue = async () => {
       try {
         const queueId = await getOrCreateQueue({
-          doctorId: selectedDoctorId as any,
+          doctorId: selectedDoctorId as Id<"doctors">,
           date: todayStr,
         });
         setSelectedQueueId(queueId);
@@ -120,14 +122,16 @@ export default function CheckInKiosk() {
 
   const handleSeed = async () => {
     setIsSeeding(true);
+    setSeedToast("");
     try {
       const result = await seedDatabase();
-      alert(result.message);
+      setSeedToast(result.message);
     } catch (err) {
       console.error(err);
-      alert("Seeding failed.");
+      setSeedToast("Seeding failed.");
     } finally {
       setIsSeeding(false);
+      setTimeout(() => setSeedToast(""), 5000);
     }
   };
 
@@ -210,7 +214,9 @@ export default function CheckInKiosk() {
     }
   };
 
-  const trackingUrl = receipt ? `${window.location.origin}/q/${receipt.tokenCode}` : "";
+  // Guard window access for SSR compatibility
+  const appOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  const trackingUrl = receipt ? `${appOrigin}/q/${receipt.tokenCode}` : "";
   const inputClass =
     "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 font-semibold focus:outline-none focus:border-teal-500 focus:bg-white transition-all text-sm";
 
@@ -231,6 +237,16 @@ export default function CheckInKiosk() {
           </button>
         </div>
       </header>
+
+      {/* Seed feedback toast */}
+      {seedToast && (
+        <div className="max-w-4xl mx-auto px-4 pt-4 w-full animate-fade-in no-print">
+          <div className="bg-teal-900 text-teal-100 text-xs font-semibold px-4 py-3 rounded-xl flex items-center justify-between gap-4">
+            <span>{seedToast}</span>
+            <button onClick={() => setSeedToast("")} className="text-teal-300 hover:text-white transition font-bold text-base leading-none cursor-pointer">×</button>
+          </div>
+        </div>
+      )}
 
       <main className="flex-grow max-w-4xl mx-auto px-4 py-8 w-full flex items-center justify-center">
         {receipt ? (

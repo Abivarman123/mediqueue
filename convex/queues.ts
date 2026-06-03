@@ -75,6 +75,10 @@ export const checkIn = mutation({
       attempts++;
     }
 
+    if (!isUnique) {
+      throw new Error("Could not generate a unique token after 10 attempts. Please try again.");
+    }
+
     // Get current max position for active waiting/called list to place patient at the end
     const currentEntries = await ctx.db
       .query("queue_entries")
@@ -91,6 +95,7 @@ export const checkIn = mutation({
     const appointmentNumber = generateAppointmentNumber(queueDate);
 
     // Create the entry
+    const checkInTime = Date.now();
     const entryId = await ctx.db.insert("queue_entries", {
       queueId: args.queueId,
       tokenCode,
@@ -101,7 +106,7 @@ export const checkIn = mutation({
       appointmentNumber,
       position,
       status: "waiting",
-      checkInTime: Date.now(),
+      checkInTime,
       emailNotificationSent: false,
     });
 
@@ -110,7 +115,7 @@ export const checkIn = mutation({
       tokenCode,
       position,
       appointmentNumber,
-      checkInTime: Date.now(),
+      checkInTime,
     };
   },
 });

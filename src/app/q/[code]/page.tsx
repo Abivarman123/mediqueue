@@ -306,7 +306,11 @@ export default function PatientQueueCard() {
 
               {/* QR Code */}
               <div className="bg-white p-3 border border-slate-100 rounded-xl flex flex-col items-center gap-1.5 shadow-sm">
-                <QRCodeSVG value={`${window.location.origin}/q/${entry.tokenCode}`} size={110} level="H" />
+                <QRCodeSVG
+                  value={`${typeof window !== "undefined" ? window.location.origin : ""}/q/${entry.tokenCode}`}
+                  size={110}
+                  level="H"
+                />
                 <span className="text-[9px] text-slate-400 font-bold uppercase">Scan to sync instantly</span>
               </div>
 

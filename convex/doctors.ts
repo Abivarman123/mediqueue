@@ -5,17 +5,27 @@ export const list = query({
   args: {},
   handler: async (ctx) => {
     const doctors = await ctx.db.query("doctors").collect();
-    const result = [];
-    for (const doc of doctors) {
-      const dept = await ctx.db.get(doc.departmentId);
-      result.push({
+
+    // Batch-fetch unique departments to avoid N+1 round-trips
+    const uniqueDeptIds = [...new Set(doctors.map((d) => d.departmentId))];
+    const deptMap = new Map(
+      await Promise.all(
+        uniqueDeptIds.map(async (id) => {
+          const dept = await ctx.db.get(id);
+          return [id, dept] as const;
+        })
+      )
+    );
+
+    return doctors.map((doc) => {
+      const dept = deptMap.get(doc.departmentId);
+      return {
         ...doc,
         departmentName: dept ? dept.name : "Unknown",
         fixedTimeStart: dept ? dept.workingHoursStart : undefined,
         fixedTimeEnd: dept ? dept.workingHoursEnd : undefined,
-      });
-    }
-    return result;
+      };
+    });
   },
 });
 
