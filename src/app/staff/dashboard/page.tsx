@@ -359,9 +359,8 @@ export default function StaffDashboard() {
                 >
                   <span
                     className={`w-4 h-4 rounded-full bg-white block transition-transform duration-200 ${
-                      queueStatus?.isOpen ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
+                      queueStatus?.isOpen ? "translate-x-6" : "translate-x-0"
+                    }`}                  />
                 </button>
               </div>
             </div>
