@@ -97,3 +97,4 @@ export const updateAvgConsult = mutation({
     await ctx.db.patch(args.doctorId, { avgConsultMinutes: args.avgConsultMinutes });
   },
 });
+

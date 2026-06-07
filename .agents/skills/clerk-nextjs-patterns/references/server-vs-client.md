@@ -102,3 +102,4 @@ import { Show } from '@clerk/nextjs';
 > **Core 2 ONLY (skip if current SDK):** Use `<SignedIn>` and `<SignedOut>` components instead of `<Show>`.
 
 [Docs](https://clerk.com/docs/reference/nextjs/auth)
+

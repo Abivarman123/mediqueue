@@ -36,3 +36,4 @@ If the answer is vague, fall back to local or packaged.
 - [ ] User explicitly needs hybrid behavior
 - [ ] Local-only and packaged-only options were considered first
 - [ ] The extension points are clearly defined before coding
+

@@ -1,6 +1,6 @@
-# MediQueue
+# MedQ
 
-MediQueue is a modern outpatient queue management system designed to reduce physical waiting room congestion and improve patient flow.
+MedQ is a modern outpatient queue management system designed to reduce physical waiting room congestion and improve patient flow.
 
 It provides:
 
@@ -8,9 +8,9 @@ It provides:
 - a staff dashboard for real-time queue operations
 - automated email alerts when patients are near the front of the queue
 
-## Why MediQueue
+## Why MedQ
 
-Traditional OPD queues often require patients to wait onsite for long periods with little visibility into progress. MediQueue shifts this experience to a live digital workflow where patients can monitor queue movement remotely and arrive closer to consultation time.
+Traditional OPD queues often require patients to wait onsite for long periods with little visibility into progress. MedQ shifts this experience to a live digital workflow where patients can monitor queue movement remotely and arrive closer to consultation time.
 
 ## Core Features
 
@@ -46,8 +46,8 @@ Traditional OPD queues often require patients to wait onsite for long periods wi
 ### 1) Clone and install dependencies
 
 ```bash
-git clone https://github.com/Abivarman123/mediqueue.git
-cd mediqueue
+git clone https://github.com/Abivarman123/medq.git
+cd medq
 npm install
 ```
 
@@ -99,7 +99,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Project Structure
 
 ```text
-MediQueue/
+medq/
   src/
     app/
       page.tsx                 # Landing + token lookup
@@ -117,14 +117,14 @@ MediQueue/
 
 ## Deployment Notes
 
-Production app: [https://mediqueuesl.vercel.app](https://mediqueuesl.vercel.app)
+Production app: [https://medqsl.vercel.app](https:/medqsl.vercel.app)
 
 - Deploy the frontend on Vercel (or any Next.js-compatible host).
 - Configure all required environment variables in your deployment platform.
 - Ensure Convex deployment values (`CONVEX_DEPLOYMENT`, `NEXT_PUBLIC_CONVEX_URL`) match the target environment.
 - Set `APP_URL` on your Convex deployment so email alert links point at the live site:
-  `npx convex env set APP_URL https://mediqueuesl.vercel.app`
-- In the [Clerk Dashboard](https://dashboard.clerk.com), add `https://mediqueuesl.vercel.app` under **Domains** (and keep `http://localhost:3000` for local dev).
+  `npx convex env set APP_URL https://your-app-name.vercel.app`
+- In the [Clerk Dashboard](https://dashboard.clerk.com), add `https://your-app-name.vercel.app` under **Domains** (and keep `http://localhost:3000` for local dev).
 - For production email delivery, set a valid `RESEND_API_KEY` and verified sender domain.
 
 ## Contributing

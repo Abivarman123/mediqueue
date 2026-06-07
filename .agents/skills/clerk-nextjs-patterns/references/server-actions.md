@@ -54,3 +54,4 @@ export async function deleteProject(projectId: string) {
 > **Core 2 ONLY (skip if current SDK):** `isAuthenticated` is not available. Use `if (!userId)` instead.
 
 [Docs](https://clerk.com/docs/reference/nextjs/server-actions)
+

@@ -103,3 +103,4 @@ async function verifyEmail(code: string) {
 Always check `result.status === 'complete'` before calling `setActive`.
 
 [Docs](https://clerk.com/docs/react/getting-started/quickstart)
+

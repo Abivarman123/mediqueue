@@ -52,3 +52,4 @@ If publishing to npm, make sure the package exposes the entry points apps need:
 - [ ] Package exports include install and typing entry points
 - [ ] Example app exercises the packaged component
 - [ ] Core behavior is covered by tests
+

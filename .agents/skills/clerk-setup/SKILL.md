@@ -325,3 +325,4 @@ Also import the shadcn CSS in your global styles:
 - **Quickstart Overview**: https://clerk.com/docs/getting-started/quickstart/overview
 - **Migration Guide**: https://clerk.com/docs/guides/development/migrating/overview
 - **Full Documentation**: https://clerk.com/docs
+

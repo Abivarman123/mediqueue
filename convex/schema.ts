@@ -54,3 +54,4 @@ export default defineSchema({
     .index("by_queue", ["queueId"])
     .index("by_queue_status_position", ["queueId", "status", "position"]),
 });
+

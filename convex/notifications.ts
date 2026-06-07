@@ -18,11 +18,11 @@ export const sendQueueAlertEmail = action({
     const apiKey = process.env.RESEND_API_KEY;
 
     const trackingUrl = queueTrackingUrl(args.tokenCode);
-    const emailSubject = `⏰ You're up soon! MediQueue Alert: Position #${args.position}`;
+    const emailSubject = `⏰ You're up soon! MedQ Alert: Position #${args.position}`;
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;">
         <div style="text-align: center; border-bottom: 2px solid #0d9488; padding-bottom: 15px; margin-bottom: 20px;">
-          <h1 style="color: #0d9488; margin: 0; font-size: 24px;">MediQueue Live Alert</h1>
+          <h1 style="color: #0d9488; margin: 0; font-size: 24px;">MedQ Live Alert</h1>
           <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Smart Waiting, Real-time Queue Tracking</p>
         </div>
         
@@ -87,7 +87,7 @@ export const sendQueueAlertEmail = action({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "MediQueue Alerts <onboarding@resend.dev>", // default sender for free sandboxes
+          from: "MedQ Alerts <onboarding@resend.dev>", // default sender for free sandboxes
           to: args.patientEmail,
           subject: emailSubject,
           html: emailHtml,
@@ -108,3 +108,4 @@ export const sendQueueAlertEmail = action({
     }
   },
 });
+

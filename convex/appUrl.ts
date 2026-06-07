@@ -1,4 +1,4 @@
-const PRODUCTION_APP_URL = "https://mediqueuesl.vercel.app";
+const PRODUCTION_APP_URL = "https://MedQsl.vercel.app";
 
 function normalizeAppUrl(url: string): string {
   return url.replace(/\/$/, "");
@@ -14,3 +14,4 @@ export function getAppUrl(): string {
 export function queueTrackingUrl(tokenCode: string): string {
   return `${getAppUrl()}/q/${tokenCode}`;
 }
+

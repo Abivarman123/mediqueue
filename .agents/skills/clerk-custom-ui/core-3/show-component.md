@@ -123,3 +123,4 @@ The `treatPendingAsSignedOut` prop controls how pending sessions (sessions with 
 ## Docs
 
 - [Show component reference](https://clerk.com/docs/components/control/show)
+

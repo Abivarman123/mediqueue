@@ -241,3 +241,4 @@ Or use the component's built-in status monitoring:
 ```bash
 npx convex run --component migrations lib:getStatus --watch
 ```
+

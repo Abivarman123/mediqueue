@@ -89,3 +89,4 @@ export function SignOutButton() {
 Pass a callback to `signOut` to navigate after the sign-out completes.
 
 [Docs](https://clerk.com/docs/react/getting-started/quickstart)
+

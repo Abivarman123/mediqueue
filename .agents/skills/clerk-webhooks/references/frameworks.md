@@ -214,3 +214,4 @@ export default defineConfig({
 - All adapters require a public webhook route, exclude `/api/webhooks(.*)` from middleware protection.
 - Vite-based frameworks (Nuxt, React Router, TanStack Start) need `allowedHosts` configured when tunneling localhost via ngrok in development.
 - Express specifically needs `express.raw({ type: 'application/json' })` for the webhook route, raw body bytes are required for signature verification.
+

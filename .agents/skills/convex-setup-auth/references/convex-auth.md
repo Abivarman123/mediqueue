@@ -186,3 +186,4 @@ If `npx convex dev` or deployment setup requires human input:
 - [ ] Offer end-to-end validation of sign up, sign out, and sign back in
 - [ ] If requested, configure the production deployment too
 - [ ] Only add extra `users` table sync if the app needs app-level user records
+

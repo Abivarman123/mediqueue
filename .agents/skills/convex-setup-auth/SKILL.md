@@ -185,3 +185,4 @@ instead.
 - [ ] Clear error messages ("Not authenticated", "Unauthorized")
 - [ ] Client auth provider configured for the chosen provider
 - [ ] If requested, production auth setup is covered too
+

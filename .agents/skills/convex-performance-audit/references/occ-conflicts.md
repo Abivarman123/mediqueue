@@ -135,3 +135,4 @@ fields") for that pattern.
 2. Mutation latency is lower and more consistent
 3. No data correctness regressions from splitting or scheduling changes
 4. Sibling writers to the same hot documents were fixed consistently
+

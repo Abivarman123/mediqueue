@@ -154,3 +154,4 @@ Use this when the app already uses Auth0 or the user wants Auth0 specifically.
 - [ ] Verify Convex authenticated state after login, or explicitly tell the user
       this path is still under investigation and send them to the official docs
 - [ ] If requested, configure the production deployment too
+

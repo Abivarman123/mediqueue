@@ -48,3 +48,4 @@ export async function GET(req: Request, { params }: { params: { orgId: string } 
 ```
 
 [Docs](https://clerk.com/docs/reference/nextjs/auth)
+

@@ -145,3 +145,4 @@ and write local env vars such as `VITE_WORKOS_CLIENT_ID` and
 - [ ] Configure `convex/auth.config.ts`
 - [ ] Verify authenticated requests reach Convex after login
 - [ ] If requested, configure the production deployment too
+

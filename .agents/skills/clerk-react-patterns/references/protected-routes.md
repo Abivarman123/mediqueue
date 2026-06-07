@@ -84,3 +84,4 @@ export function Dashboard() {
 The `ProtectedRoute` pattern is preferred for route-level control; `<Show>` is better for component-level.
 
 [Docs](https://clerk.com/docs/react/getting-started/quickstart)
+

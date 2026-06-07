@@ -409,3 +409,4 @@ Before closing the audit, confirm:
 3. Tests or validation cover fallback behavior
 4. Migration safety is preserved while fields or indexes are unbackfilled
 5. Sibling functions were fixed consistently
+

@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { QRCodeSVG } from "qrcode.react";
 import { 
-  Activity, 
   ArrowLeft, 
   Clock, 
   MapPin, 
@@ -230,9 +230,13 @@ export default function PatientQueueCard() {
             {/* Doctor info snippet */}
             <div className="border-t border-slate-100 pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-sm text-slate-500 font-semibold">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600">
-                  <Activity className="w-4 h-4" />
-                </div>
+                <Image
+                  src="/favicon.ico"
+                  alt="MedQ Logo"
+                  width={32}
+                  height={32}
+                  className="rounded-lg"
+                />
                 <div>
                   <span className="text-[9px] text-slate-400 block -mb-0.5">DOCTOR</span>
                   <span className="text-slate-800 text-xs font-bold">{doctor.name}</span>

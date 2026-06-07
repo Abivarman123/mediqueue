@@ -12,7 +12,7 @@ if (!convexUrl) {
     );
   } else {
     console.warn(
-      "[MediQueue] NEXT_PUBLIC_CONVEX_URL is not set. Real-time features will not work until you run `npx convex dev`."
+      "[MedQ] NEXT_PUBLIC_CONVEX_URL is not set. Real-time features will not work until you run `npx convex dev`."
     );
   }
 }
