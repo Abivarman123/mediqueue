@@ -18,7 +18,6 @@ import {
   User,
   Phone,
   Calendar,
-  Hash,
   CheckCircle2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -581,11 +580,12 @@ export default function CheckInKiosk() {
                           doc.fixedTimeStart && doc.fixedTimeEnd
                             ? `${doc.fixedTimeStart}-${doc.fixedTimeEnd}`
                             : "08:00-17:00";
+                        const isOnBreak = doc.status === "on_break";
                         return (
                           <button
                             key={doc._id}
                             type="button"
-                            disabled={doc.status === "off"}
+                            disabled={doc.status === "off" || isOnBreak}
                             onClick={() => setSelectedDoctorId(doc._id)}
                             className={`text-left border-2 rounded-xl p-3 flex flex-col gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${isSelected ? "border-teal-500 bg-teal-50/60 shadow-md" : "border-slate-200 hover:border-slate-300 bg-white"}`}
                           >
@@ -597,7 +597,7 @@ export default function CheckInKiosk() {
                                 className={`w-2 h-2 rounded-full shrink-0 ${statusColor}`}
                               />
                             </div>
-                            <span className="font-extrabold text-slate-800 text-sm leading-tight">
+                            <span className={`font-extrabold text-sm leading-tight ${isOnBreak ? "text-slate-400" : "text-slate-800"}`}>
                               {doc.name}
                             </span>
                             <span className="text-[10px] text-slate-500 font-semibold">

@@ -61,17 +61,17 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.push("/staff/dashboard")}
-              className="text-sm font-semibold text-slate-600 hover:text-teal-600 px-3 py-2 rounded-lg hover:bg-slate-50 transition"
-            >
-              Staff Console
-            </button>
-            <button
               onClick={() => router.push("/checkin")}
               className="hidden sm:inline-flex text-sm font-semibold bg-teal-50 text-teal-700 hover:bg-teal-100 px-4 py-2 rounded-lg transition items-center gap-1.5"
             >
               <CalendarCheck className="w-4 h-4" />
               Check-In
+            </button>
+            <button
+              onClick={() => router.push("/staff/dashboard")}
+              className="text-sm font-semibold text-slate-600 hover:text-teal-600 px-3 py-2 rounded-lg hover:bg-slate-50 transition"
+            >
+              Staff Console
             </button>
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function Home() {
       <main className="flex-grow max-w-6xl mx-auto px-4 w-full py-12 flex flex-col gap-16">
         {/* Hero Section & Patient Lookup */}
         <div className="grid md:grid-cols-12 gap-8 items-center relative">
-          <div className="absolute -left-4 -top-1 md:-left-0 md:-top-5 w-64 h-64 md:w-200 md:h-200 opacity-15 pointer-events-none z-0">
+          <div className="absolute -left-4 -top-10 md:-left-0 md:-top-5 w-64 h-64 md:w-200 md:h-200 opacity-15 pointer-events-none z-0">
             <Image
               src="/Doctors-pana.svg"
               alt="Doctors illustration"
@@ -112,13 +112,13 @@ export default function Home() {
                 <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600">
                   <Mail className="w-4 h-4" />
                 </div>
-                Free Email Alerts
+                Email Alerts
               </div>
               <div className="flex items-center gap-2 text-sm text-slate-500">
                 <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600">
                   <Smartphone className="w-4 h-4" />
                 </div>
-                Zero-Auth PWA
+                No login needed
               </div>
             </div>
           </div>
@@ -126,14 +126,31 @@ export default function Home() {
           {/* Search Box / Portal */}
           <div className="md:col-span-5">
             <div className="bg-white border border-slate-200 shadow-xl rounded-2xl p-6 md:p-8 flex flex-col gap-6 animate-slide-in">
-              <div>
+
+            <div>
                 <h2 className="text-xl font-bold text-slate-900">
-                  Track Your Position
+                  Manage Your Visit
                 </h2>
                 <p className="text-sm text-slate-500 mt-1">
-                  Enter the 6-character code printed on your receipt or sent in
-                  your email.
+                  Make an appointment or enter the 6-character code printed on your receipt.
                 </p>
+              </div>
+
+              <button
+                onClick={() => router.push("/checkin")}
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-teal-100 flex items-center justify-center gap-2 text-base cursor-pointer"
+              >
+                <UserCheck className="w-5 h-5" />
+                New Appointment
+              </button>
+
+              <div className="relative flex items-center justify-center py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-100" />
+                </div>
+                <span className="relative bg-white px-3 text-xs text-slate-400 font-semibold uppercase">
+                  Or
+                </span>
               </div>
 
               <form onSubmit={handleTrack} className="flex flex-col gap-4">
@@ -157,29 +174,12 @@ export default function Home() {
 
                 <button
                   type="submit"
-                  className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-teal-100 flex items-center justify-center gap-2 text-base cursor-pointer"
+                  className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-4 rounded-xl transition shadow-md border-2 border-slate-200 hover:border-slate-300 flex items-center justify-center gap-2 text-base cursor-pointer"
                 >
                   Track Live Queue
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </form>
-
-              <div className="relative flex items-center justify-center py-2">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-100" />
-                </div>
-                <span className="relative bg-white px-3 text-xs text-slate-400 font-semibold uppercase">
-                  Or
-                </span>
-              </div>
-
-              <button
-                onClick={() => router.push("/checkin")}
-                className="w-full border-2 border-dashed border-slate-200 hover:border-teal-500 text-slate-600 hover:text-teal-600 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm cursor-pointer"
-              >
-                <UserCheck className="w-4.5 h-4.5" />
-                New appoinment
-              </button>
             </div>
           </div>
         </div>
@@ -266,7 +266,7 @@ export default function Home() {
             </p>
           </div>
           <div className="flex flex-col gap-6 bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/10 text-center">
-            <div className="text-4xl font-extrabold text-white">~15 min</div>
+            <div className="text-4xl font-extrabold text-white">~30 min</div>
             <div className="text-xs text-teal-100 uppercase tracking-widest font-bold -mt-3">
               Average Wait Saved
             </div>
