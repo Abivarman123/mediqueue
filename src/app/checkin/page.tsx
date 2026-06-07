@@ -19,6 +19,8 @@ import {
   Phone,
   Calendar,
   CheckCircle2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -82,6 +84,7 @@ export default function CheckInKiosk() {
   const [isSeeding, setIsSeeding] = useState(false);
   const [seedToast, setSeedToast] = useState("");
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const departments = useMemo(() => {
     if (!doctors) return [];
@@ -145,6 +148,17 @@ export default function CheckInKiosk() {
     setSelectedDoctorId("");
     setDepartmentFilter("all");
     setAgreedToTerms(false);
+  };
+
+  const handleCopyToken = async () => {
+    if (!receipt) return;
+    try {
+      await navigator.clipboard.writeText(receipt.tokenCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy token:", err);
+    }
   };
 
   const handleCheckIn = async (e: React.FormEvent) => {
@@ -309,9 +323,29 @@ export default function CheckInKiosk() {
                   <span className="text-[10px] text-slate-400 font-bold uppercase block">
                     Queue token
                   </span>
-                  <span className="font-mono font-black text-teal-700 text-lg">
-                    {receipt.tokenCode}
-                  </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-black text-teal-700 text-lg">
+                      {receipt.tokenCode}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCopyToken}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-teal-700 bg-white border border-slate-200 hover:border-teal-300 px-2.5 py-1.5 rounded-lg transition cursor-pointer no-print"
+                      title={copied ? "Copied!" : "Copy token"}
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-teal-600" />
+                          <span className="text-teal-600">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
                   <span className="text-[10px] text-slate-400 font-bold uppercase block">
