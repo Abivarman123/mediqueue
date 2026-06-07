@@ -1,4 +1,4 @@
-const PRODUCTION_APP_URL = "https://MedQsl.vercel.app";
+const PRODUCTION_APP_URL = "https://medqsl.vercel.app";
 
 function normalizeAppUrl(url: string): string {
   return url.replace(/\/$/, "");

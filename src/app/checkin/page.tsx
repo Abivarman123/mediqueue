@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { QRCodeSVG } from "qrcode.react";
@@ -65,6 +65,7 @@ export default function CheckInKiosk() {
   const getOrCreateQueue = useMutation(api.queues.getOrCreateQueue);
   const checkIn = useMutation(api.queues.checkIn);
   const seedDatabase = useMutation(api.seed.seedAll);
+  const sendConfirmationEmail = useAction(api.notifications.sendConfirmationEmail);
 
   const todayStr = new Date().toISOString().split("T")[0];
 
@@ -220,6 +221,22 @@ export default function CheckInKiosk() {
         position: result.position,
         avgConsult: chosenDoc?.avgConsultMinutes || 10,
       });
+
+      if (patientEmail.trim()) {
+        void sendConfirmationEmail({
+          patientName: fullName,
+          patientEmail: patientEmail.trim(),
+          tokenCode: result.tokenCode,
+          appointmentNumber: result.appointmentNumber,
+          doctorName: chosenDoc?.name || "Physician",
+          departmentName: chosenDoc?.departmentName || "Outpatient",
+          room: chosenDoc?.room || "—",
+          visitDate: todayStr,
+          checkInTime: result.checkInTime,
+          position: result.position,
+          avgConsultMinutes: chosenDoc?.avgConsultMinutes || 10,
+        });
+      }
 
       resetForm();
     } catch (err: unknown) {
