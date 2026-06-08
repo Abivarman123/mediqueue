@@ -3,22 +3,27 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { QRCodeSVG } from "qrcode.react";
-import { 
-  ArrowLeft, 
-  Clock, 
-  MapPin, 
-  User, 
-  Bell, 
-  CheckCircle2, 
+import {
+  ArrowLeft,
+  Clock,
+  MapPin,
+  User,
+  Bell,
+  CheckCircle2,
   AlertTriangle,
   Mail,
-  Heart,
   Loader2,
   Printer
 } from "lucide-react";
+
+// Lazy load QRCodeSVG to reduce initial bundle size
+const QRCodeSVG = dynamic(() => import("qrcode.react").then(mod => mod.QRCodeSVG), {
+  loading: () => <div className="w-[110px] h-[110px] bg-slate-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
 
 export default function PatientQueueCard() {
   const params = useParams();
@@ -88,7 +93,7 @@ export default function PatientQueueCard() {
           <div>
             <h3 className="font-extrabold text-slate-900 text-xl">Queue Code Not Found</h3>
             <p className="text-sm text-slate-500 mt-2">
-              We couldn't find active queue entry with code <strong className="text-slate-800 font-mono">{code}</strong>.
+              We couldn&apos;t find active queue entry with code <strong className="text-slate-800 font-mono">{code}</strong>.
             </p>
             <p className="text-xs text-slate-400 mt-1">
               Note: Queue codes automatically expire at the end of each clinic day.
@@ -222,7 +227,7 @@ export default function PatientQueueCard() {
                   {liveStats.currentPosition === 1 ? "You are next! Please enter" : liveStats.estimatedWaitRange}
                 </div>
                 <p className="text-[10px] text-slate-400 leading-normal font-semibold">
-                  This estimation dynamically auto-corrects based on doctor's consultation pace.
+                  This estimation dynamically auto-corrects based on doctor&apos;s consultation pace.
                 </p>
               </div>
             )}
@@ -269,13 +274,13 @@ export default function PatientQueueCard() {
                 </div>
 
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Head to the cafeteria or grab a coffee. We'll drop a clinic notification straight into your email inbox when you are only <strong>2 patients away</strong>!
+                  Head to the cafeteria or grab a coffee. We&apos;ll drop a clinic notification straight into your email inbox when you are only <strong>2 patients away</strong>!
                 </p>
 
                 {emailSaved || entry.emailNotificationSent ? (
                   <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-center gap-2 text-emerald-800">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                    <span className="text-xs font-bold">Alert configured! Check your inbox when you're 2 away.</span>
+                    <span className="text-xs font-bold">Alert configured! Check your inbox when you&apos;re 2 away.</span>
                   </div>
                 ) : (
                   <form onSubmit={handleSaveEmail} className="flex flex-col gap-3">
@@ -374,7 +379,7 @@ export default function PatientQueueCard() {
                 <span className="absolute -left-[30px] top-0.5 w-4 h-4 rounded-full border-2 border-white flex items-center justify-center bg-teal-500" />
                 <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wider">Your Position</h4>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  You are positioned <strong className="text-teal-600 font-extrabold">#{liveStats.currentPosition}</strong> in today's tracking list.
+                  You are positioned <strong className="text-teal-600 font-extrabold">#{liveStats.currentPosition}</strong> in today&apos;s tracking list.
                 </p>
               </div>
 
