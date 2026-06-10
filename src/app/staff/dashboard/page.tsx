@@ -33,6 +33,7 @@ export default function StaffDashboard() {
   const checkInMutation = useMutation(api.queues.checkIn);
 
   const sendEmailAlertAction = useAction(api.notifications.sendQueueAlertEmail);
+  const sendCalledEmailAction = useAction(api.notifications.sendCalledEmail);
 
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
   const [activeQueueId, setActiveQueueId] = useState<Id<"queues"> | null>(null);
@@ -45,6 +46,8 @@ export default function StaffDashboard() {
 
   const [newPatientName, setNewPatientName] = useState("");
   const [newPatientEmail, setNewPatientEmail] = useState("");
+  const [newPatientPhone, setNewPatientPhone] = useState("");
+  const [newPatientDate, setNewPatientDate] = useState("");
   const [addLoading, setAddLoading] = useState(false);
   const [walkInError, setWalkInError] = useState("");
 
@@ -158,6 +161,8 @@ export default function StaffDashboard() {
       });
       setNewPatientName("");
       setNewPatientEmail("");
+      setNewPatientPhone("");
+      setNewPatientDate("");
     } catch (err: unknown) {
       console.error(err);
       const message =
@@ -171,6 +176,57 @@ export default function StaffDashboard() {
       }
     } finally {
       setAddLoading(false);
+    }
+  };
+
+  const handleFillMockData = () => {
+    const mockNames = [
+      "John Smith",
+      "Sarah Johnson",
+      "Michael Brown",
+      "Emily Davis",
+      "David Wilson",
+      "Jessica Martinez",
+      "Christopher Garcia",
+      "Ashley Rodriguez",
+    ];
+    const mockEmails = ["demo@medq.com"];
+    const mockPhones = [
+      "077-123-4567",
+      "077-234-5678",
+      "077-345-6789",
+      "076-456-7890",
+      "076-567-8901",
+      "076-678-9012",
+      "075-789-0123",
+      "075-890-1234",
+    ];
+
+    const randomIndex = Math.floor(Math.random() * mockNames.length);
+    setNewPatientName(mockNames[randomIndex]);
+    setNewPatientEmail(mockEmails[0]);
+    setNewPatientPhone(mockPhones[randomIndex]);
+    setNewPatientDate(todayStr);
+  };
+
+  const handleCallPatient = async (patient: any) => {
+    await updateStatus({
+      entryId: patient._id,
+      status: "called",
+    });
+
+    if (patient.patientEmail && activeDoctor) {
+      try {
+        await sendCalledEmailAction({
+          patientName: patient.patientName,
+          patientEmail: patient.patientEmail,
+          tokenCode: patient.tokenCode,
+          doctorName: activeDoctor.name,
+          room: activeDoctor.room,
+        });
+      } catch (err) {
+        console.error("Failed to send called email:", err);
+      }
     }
   };
 
@@ -464,6 +520,27 @@ export default function StaffDashboard() {
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2.5 text-xs text-slate-800 placeholder-slate-400 font-bold focus:outline-none focus:border-teal-500 focus:bg-white transition-all"
                   />
                 </div>
+                <input
+                  type="tel"
+                  value={newPatientPhone}
+                  onChange={(e) => setNewPatientPhone(e.target.value)}
+                  placeholder="Patient Phone"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 placeholder-slate-400 font-bold focus:outline-none focus:border-teal-500 focus:bg-white transition-all"
+                />
+                <input
+                  type="date"
+                  value={newPatientDate}
+                  onChange={(e) => setNewPatientDate(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 font-bold focus:outline-none focus:border-teal-500 focus:bg-white transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={handleFillMockData}
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2 rounded-xl transition text-xs flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Fill with Demo Data
+                </button>
                 <button
                   type="submit"
                   disabled={
@@ -752,12 +829,7 @@ export default function StaffDashboard() {
                             </button>
                             <button
                               disabled={!!currentlyCalled || !!inConsultation}
-                              onClick={() =>
-                                updateStatus({
-                                  entryId: patient._id,
-                                  status: "called",
-                                })
-                              }
+                              onClick={() => handleCallPatient(patient)}
                               className="bg-teal-50 hover:bg-teal-100 text-teal-700 font-extrabold py-2 px-4 rounded-xl transition text-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
                             >
                               <Volume2 className="w-3.5 h-3.5" />

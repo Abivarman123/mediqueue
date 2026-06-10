@@ -433,3 +433,98 @@ export const sendQueueAlertEmail = action({
   },
 });
 
+export const sendCalledEmail = action({
+  args: {
+    patientName: v.string(),
+    patientEmail: v.string(),
+    tokenCode: v.string(),
+    doctorName: v.string(),
+    room: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const apiKey = process.env.RESEND_API_KEY;
+
+    const trackingUrl = queueTrackingUrl(args.tokenCode);
+    const emailSubject = `🔔 You're being called! MedQ: ${args.tokenCode}`;
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;">
+        <div style="text-align: center; border-bottom: 2px solid #0d9488; padding-bottom: 15px; margin-bottom: 20px;">
+          <h1 style="color: #0d9488; margin: 0; font-size: 24px;">MedQ Call Notification</h1>
+          <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Smart Waiting, Real-time Queue Tracking</p>
+        </div>
+        
+        <p style="font-size: 16px; color: #1e293b; line-height: 1.5;">Dear <strong>${args.patientName}</strong>,</p>
+        
+        <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px; margin: 20px 0;">
+          <h3 style="margin: 0 0 5px 0; color: #b45309; font-size: 16px;">You're being called now!</h3>
+          <p style="margin: 0; color: #92400e; font-size: 15px;">
+            Please proceed to the consultation room immediately. The doctor is ready to see you.
+          </p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin: 25px 0;">
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 14px;">Doctor</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-weight: bold; text-align: right;">${args.doctorName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 14px;">Room</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-weight: bold; text-align: right;">${args.room}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 14px;">Your Queue Code</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #0d9488; font-weight: bold; font-family: monospace; font-size: 18px; text-align: right;">${args.tokenCode}</td>
+          </tr>
+        </table>
+
+        <p style="font-size: 14px; color: #64748b; line-height: 1.5; text-align: center; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+          Track your status: <br/>
+          <a href="${trackingUrl}" style="color: #0d9488; text-decoration: underline; font-weight: bold; display: inline-block; margin-top: 5px;">
+            View Real-time Position Card
+          </a>
+        </p>
+        
+        <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 10px;">
+          This is an automated clinical notification. Please do not reply directly to this email.
+        </p>
+      </div>
+    `;
+
+    if (!apiKey) {
+      console.log("----------------------------------------");
+      console.log(`[MOCK CALLED EMAIL SENT TO: ${args.patientEmail}]`);
+      console.log(`Subject: ${emailSubject}`);
+      console.log(`Body outline: Patient called to room, Doctor = ${args.doctorName}, Room = ${args.room}, Code = ${args.tokenCode}`);
+      console.log(`Tracking URL: ${trackingUrl}`);
+      console.log("----------------------------------------");
+      return { success: true, mocked: true };
+    }
+
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "MedQ Alerts <onboarding@resend.dev>",
+          to: args.patientEmail,
+          subject: emailSubject,
+          html: emailHtml,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(JSON.stringify(errorData));
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to send called email via Resend:", error);
+      return { success: false, error: String(error) };
+    }
+  },
+});
+

@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   Copy,
   Check,
+  RefreshCw,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -149,6 +150,55 @@ export default function CheckInKiosk() {
     setSelectedDoctorId("");
     setDepartmentFilter("all");
     setAgreedToTerms(false);
+  };
+
+  const handleFillMockData = () => {
+    const firstNames = [
+      "John",
+      "Sarah",
+      "Michael",
+      "Emily",
+      "David",
+      "Jessica",
+      "Christopher",
+      "Ashley",
+    ];
+    const lastNames = [
+      "Smith",
+      "Johnson",
+      "Brown",
+      "Davis",
+      "Wilson",
+      "Martinez",
+      "Garcia",
+      "Rodriguez",
+    ];
+    const phones = [
+      "+94 0758187300",
+      "+94 0712345678",
+      "+94 0778765432",
+      "+94 0765432109",
+      "+94 0789012345",
+      "+94 0745678901",
+      "+94 0723456789",
+      "+94 0798765432",
+    ];
+
+    const randomIndex = Math.floor(Math.random() * firstNames.length);
+    setFirstName(firstNames[randomIndex]);
+    setLastName(lastNames[randomIndex]);
+    setPatientPhone(phones[randomIndex]);
+    setPatientEmail("demo@medq.com");
+
+    // Generate a random date of birth between 18 and 80 years ago
+    const today = new Date();
+    const minAge = 18;
+    const maxAge = 80;
+    const randomAge = Math.floor(Math.random() * (maxAge - minAge + 1)) + minAge;
+    const birthYear = today.getFullYear() - randomAge;
+    const birthMonth = String(today.getMonth() + 1).padStart(2, "0");
+    const birthDay = String(today.getDate()).padStart(2, "0");
+    setDateOfBirth(`${birthYear}-${birthMonth}-${birthDay}`);
   };
 
   const handleCopyToken = async () => {
@@ -594,6 +644,14 @@ export default function CheckInKiosk() {
                         </div>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={handleFillMockData}
+                      className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 rounded-xl transition text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Fill with Demo Data
+                    </button>
                   </fieldset>
 
                   <fieldset className="flex flex-col gap-4">
