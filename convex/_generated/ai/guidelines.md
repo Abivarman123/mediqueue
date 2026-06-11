@@ -363,4 +363,3 @@ export const exampleQuery = query({
 ```
 
 - Convex storage stores items as `Blob` objects. You must convert all items to/from a `Blob` when using Convex storage.
-

@@ -217,4 +217,3 @@ export const clearField = migrations.define({
   migrateOne: () => ({ optionalField: undefined }),
 });
 ```
-

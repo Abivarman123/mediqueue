@@ -37,4 +37,3 @@ convex/
 - [ ] App installs it with `app.use(...)`
 - [ ] Component owns only its own tables
 - [ ] App wrappers handle client-facing calls when needed
-

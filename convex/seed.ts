@@ -304,3 +304,224 @@ export const seedAdditionalDoctors = mutation({
   },
 });
 
+// ─── Mock Queue Seeder ───────────────────────────────────────────────────────
+
+const MOCK_FIRST_NAMES = [
+  "Aiden", "Amara", "Benjamin", "Chloe", "Daniel", "Elena", "Farid", "Grace",
+  "Haruto", "Isabella", "James", "Kavya", "Liam", "Mia", "Noah", "Olivia",
+  "Patrick", "Quinn", "Rohan", "Sophia", "Thomas", "Uma", "Victor", "Wendy",
+  "Xander", "Yasmin", "Zara", "Marcus", "Natalie", "Oscar",
+];
+const MOCK_LAST_NAMES = [
+  "Anderson", "Patel", "Johnson", "Williams", "Brown", "Jones", "Garcia",
+  "Miller", "Davis", "Martinez", "Chen", "Taylor", "Thomas", "Jackson",
+  "White", "Harris", "Martin", "Thompson", "Moore", "Nguyen", "Lee", "Walker",
+  "Hall", "Allen", "Young", "Hernandez", "King", "Wright", "Lopez", "Hill",
+];
+
+function makeMockToken(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let result = "";
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+function pickRandom<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function makePatientName(): string {
+  return `${pickRandom(MOCK_FIRST_NAMES)} ${pickRandom(MOCK_LAST_NAMES)}`;
+}
+
+/**
+ * Fills today's queue for every doctor in the database with realistic mock
+ * patient entries. Existing entries are left untouched — only new ones are
+ * appended.  Each doctor gets between 3–4 active patients so the dashboard
+ * shows a realistic but lean demo queue.
+ *
+ * If the database is empty it will first bootstrap departments and doctors
+ * automatically, so no separate "Sync demo data" step is needed.
+ */
+export const seedMockQueue = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    let doctors = await ctx.db.query("doctors").collect();
+
+    // Auto-bootstrap if the database has never been seeded
+    if (doctors.length === 0) {
+      const deptByCode = await ensureDepartments(ctx);
+      await ensureDoctors(ctx, deptByCode);
+      doctors = await ctx.db.query("doctors").collect();
+    }
+
+    let totalAdded = 0;
+
+    for (const doctor of doctors) {
+      // Skip doctors that are "off" — they wouldn't have an active queue
+      if (doctor.status === "off") continue;
+
+      // Get or create today's queue
+      let queue = await ctx.db
+        .query("queues")
+        .withIndex("by_doctor_date", (q) =>
+          q.eq("doctorId", doctor._id).eq("date", todayStr)
+        )
+        .first();
+
+      if (!queue) {
+        const queueId = await ctx.db.insert("queues", {
+          doctorId: doctor._id,
+          date: todayStr,
+          isOpen: true,
+        });
+        queue = await ctx.db.get(queueId);
+      }
+
+      if (!queue) continue;
+
+      // Count current active (non-done/skipped) entries so we don't dupe
+      const existing = await ctx.db
+        .query("queue_entries")
+        .withIndex("by_queue", (q) => q.eq("queueId", queue!._id))
+        .collect();
+
+      const activeCount = existing.filter((e) =>
+        ["waiting", "called", "arrived", "in_consultation"].includes(e.status)
+      ).length;
+
+      // We want 3–4 active patients total per doctor
+      const targetActive = 3 + Math.floor(Math.random() * 2); // 3..4
+      const toAdd = Math.max(0, targetActive - activeCount);
+
+      if (toAdd === 0) continue;
+
+      const now = Date.now();
+      const avgMin = doctor.avgConsultMinutes || 10;
+
+      // Build a token set from existing entries to avoid collisions
+      const usedTokens = new Set(existing.map((e) => e.tokenCode));
+
+      // Add 1–2 "done" patients to show a bit of history
+      const doneCount = 1 + Math.floor(Math.random() * 2);
+      for (let i = 0; i < doneCount; i++) {
+        let token = makeMockToken();
+        while (usedTokens.has(token)) token = makeMockToken();
+        usedTokens.add(token);
+
+        const checkInTime = now - (doneCount - i + toAdd + 2) * avgMin * 60_000;
+        const calledTime = checkInTime + avgMin * 30_000;
+        const doneTime = calledTime + avgMin * 60_000;
+
+        await ctx.db.insert("queue_entries", {
+          queueId: queue._id,
+          tokenCode: token,
+          patientName: makePatientName(),
+          position: 0,
+          status: "done",
+          checkInTime,
+          calledTime,
+          doneTime,
+          emailNotificationSent: true,
+        });
+        totalAdded++;
+      }
+
+      // Determine statuses for the active wave
+      // We'll place 1 in_consultation, then rest as waiting
+      const statuses: Array<"in_consultation" | "waiting"> = [];
+      if (!existing.some((e) => e.status === "in_consultation")) {
+        statuses.push("in_consultation");
+      }
+      for (let i = statuses.length; i < toAdd; i++) {
+        statuses.push("waiting");
+      }
+
+      let nextPosition =
+        activeCount === 0 ? 1 : Math.max(...existing.map((e) => e.position)) + 1;
+
+      for (let i = 0; i < statuses.length; i++) {
+        let token = makeMockToken();
+        while (usedTokens.has(token)) token = makeMockToken();
+        usedTokens.add(token);
+
+        const status = statuses[i];
+        const checkInTime = now - (toAdd - i) * avgMin * 45_000;
+        const isInConsult = status === "in_consultation";
+
+        await ctx.db.insert("queue_entries", {
+          queueId: queue._id,
+          tokenCode: token,
+          patientName: makePatientName(),
+          position: isInConsult ? 0 : nextPosition++,
+          status,
+          checkInTime,
+          ...(isInConsult ? { calledTime: checkInTime + avgMin * 30_000 } : {}),
+          emailNotificationSent: false,
+        });
+        totalAdded++;
+      }
+    }
+
+    return {
+      message: `Mock queue generated! Added ${totalAdded} patient entries across ${doctors.filter((d) => d.status !== "off").length} active doctors.`,
+      entriesAdded: totalAdded,
+    };
+  },
+});
+
+/**
+ * Clears all queue entries (and queues) for today across all doctors.
+ * Useful for resetting the demo state.
+ */
+export const clearTodayQueues = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    const doctors = await ctx.db.query("doctors").collect();
+
+    let removedEntries = 0;
+    let removedQueues = 0;
+
+    for (const doctor of doctors) {
+      const queue = await ctx.db
+        .query("queues")
+        .withIndex("by_doctor_date", (q) =>
+          q.eq("doctorId", doctor._id).eq("date", todayStr)
+        )
+        .first();
+
+      if (!queue) continue;
+
+      // Delete all entries in this queue in batches
+      let batch = await ctx.db
+        .query("queue_entries")
+        .withIndex("by_queue", (q) => q.eq("queueId", queue._id))
+        .take(100);
+
+      while (batch.length > 0) {
+        for (const entry of batch) {
+          await ctx.db.delete(entry._id);
+          removedEntries++;
+        }
+        batch = await ctx.db
+          .query("queue_entries")
+          .withIndex("by_queue", (q) => q.eq("queueId", queue._id))
+          .take(100);
+      }
+
+      await ctx.db.delete(queue._id);
+      removedQueues++;
+    }
+
+    return {
+      message: `Cleared ${removedEntries} entries across ${removedQueues} queues for today.`,
+      removedEntries,
+      removedQueues,
+    };
+  },
+});
+

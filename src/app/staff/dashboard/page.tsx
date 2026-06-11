@@ -12,10 +12,11 @@ import {
   Play,
   Check,
   RefreshCw,
-  Database,
   Plus,
   Mail,
   Stethoscope,
+  Wand2,
+  Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -24,7 +25,8 @@ export default function StaffDashboard() {
   const router = useRouter();
 
   const doctors = useQuery(api.doctors.list);
-  const seedDatabase = useMutation(api.seed.seedAll);
+  const seedMockQueue = useMutation(api.seed.seedMockQueue);
+  const clearTodayQueues = useMutation(api.seed.clearTodayQueues);
 
   const getOrCreateQueue = useMutation(api.queues.getOrCreateQueue);
   const updateStatus = useMutation(api.queues.updateEntryStatus);
@@ -37,7 +39,8 @@ export default function StaffDashboard() {
 
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
   const [activeQueueId, setActiveQueueId] = useState<Id<"queues"> | null>(null);
-  const [isSeeding, setIsSeeding] = useState(false);
+  const [isMockSeeding, setIsMockSeeding] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [seedToast, setSeedToast] = useState("");
 
   // Tracks entry IDs that have already had an email dispatch in this browser session
@@ -78,18 +81,36 @@ export default function StaffDashboard() {
     activeQueueId ? { queueId: activeQueueId } : "skip",
   );
 
-  const handleSeed = async () => {
-    setIsSeeding(true);
+
+  const handleMockQueue = async () => {
+    setIsMockSeeding(true);
     setSeedToast("");
     try {
-      const result = await seedDatabase();
+      const result = await seedMockQueue();
       setSeedToast(result.message);
     } catch (err) {
       console.error(err);
-      setSeedToast("Seeding failed. Check console for details.");
+      setSeedToast("Failed to generate mock queue. Check console for details.");
     } finally {
-      setIsSeeding(false);
-      setTimeout(() => setSeedToast(""), 5000);
+      setIsMockSeeding(false);
+      setTimeout(() => setSeedToast(""), 6000);
+    }
+  };
+
+  const handleClearToday = async () => {
+    if (!window.confirm("Clear ALL queue entries for today across all doctors? This cannot be undone.")) return;
+    setIsClearing(true);
+    setSeedToast("");
+    try {
+      const result = await clearTodayQueues();
+      setSeedToast(result.message);
+      setSelectedDoctorId("");
+    } catch (err) {
+      console.error(err);
+      setSeedToast("Failed to clear queues. Check console for details.");
+    } finally {
+      setIsClearing(false);
+      setTimeout(() => setSeedToast(""), 6000);
     }
   };
 
@@ -271,12 +292,23 @@ export default function StaffDashboard() {
             </span>
             <button
               type="button"
-              onClick={handleSeed}
-              disabled={isSeeding}
-              className="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              onClick={handleMockQueue}
+              disabled={isMockSeeding}
+              title="Populate today's queues for all doctors with demo patients"
+              className="text-xs font-bold bg-teal-700 hover:bg-teal-600 text-teal-100 px-3 py-2 rounded-lg transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              <Database className="w-3.5 h-3.5" />
-              {isSeeding ? "Syncing…" : "Sync demo data"}
+              <Wand2 className="w-3.5 h-3.5" />
+              {isMockSeeding ? "Generating…" : "Generate Mock Queue"}
+            </button>
+            <button
+              type="button"
+              onClick={handleClearToday}
+              disabled={isClearing}
+              title="Clear all queue entries for today (demo reset)"
+              className="text-xs font-bold bg-rose-900/60 hover:bg-rose-800 text-rose-300 px-3 py-2 rounded-lg transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {isClearing ? "Clearing…" : "Clear Today"}
             </button>
           </div>
         </div>
@@ -324,16 +356,16 @@ export default function StaffDashboard() {
             ) : doctors.length === 0 ? (
               <div className="flex-1 px-5 pb-5 flex flex-col gap-4 items-center justify-center text-center">
                 <p className="text-xs text-slate-500 leading-normal">
-                  No clinics setup yet. Seed the database with demo records to
-                  start testing.
+                  No doctors set up yet. Click <strong>Generate Mock Queue</strong> in the header to
+                  seed demo data and populate today's queues in one step.
                 </p>
                 <button
-                  onClick={handleSeed}
-                  disabled={isSeeding}
+                  onClick={handleMockQueue}
+                  disabled={isMockSeeding}
                   className="bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
-                  <Database className="w-4 h-4" />
-                  {isSeeding ? "Seeding..." : "Seed Demo Database"}
+                  <Wand2 className="w-4 h-4" />
+                  {isMockSeeding ? "Generating..." : "Generate Mock Queue"}
                 </button>
               </div>
             ) : (

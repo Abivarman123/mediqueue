@@ -80,7 +80,6 @@ export default function CheckInKiosk() {
     null,
   );
   const [departmentFilter, setDepartmentFilter] = useState("all");
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [isSeeding, setIsSeeding] = useState(false);
@@ -149,7 +148,6 @@ export default function CheckInKiosk() {
     setPatientEmail("");
     setSelectedDoctorId("");
     setDepartmentFilter("all");
-    setAgreedToTerms(false);
   };
 
   const handleFillMockData = () => {
@@ -223,7 +221,6 @@ export default function CheckInKiosk() {
     if (!patientPhone.trim())
       return setErrorMsg("Please enter a mobile number.");
     if (!selectedDoctorId) return setErrorMsg("Please select a doctor.");
-    if (!agreedToTerms) return setErrorMsg("Please confirm the notice.");
     if (selectedQueueStatus && !selectedQueueStatus.isOpen) {
       return setErrorMsg(
         "Queue registration is currently closed for this doctor.",
@@ -718,19 +715,6 @@ export default function CheckInKiosk() {
                     </div>
                   </fieldset>
 
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={agreedToTerms}
-                      onChange={(e) => setAgreedToTerms(e.target.checked)}
-                      className="mt-1 w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
-                    />
-                    <span className="text-xs text-slate-600 leading-relaxed">
-                      I confirm this information is accurate and understand this
-                      registers me to today&apos;s queue using the doctor&apos;s
-                      fixed hospital schedule.
-                    </span>
-                  </label>
 
                   {errorMsg && (
                     <p className="text-xs text-rose-600 font-semibold flex items-center gap-1.5 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">

@@ -139,4 +139,3 @@ Frontend API URL value. Do not treat them as two different URLs.
 - [ ] Configure `convex/auth.config.ts`
 - [ ] Verify Convex authenticated state after login
 - [ ] If requested, configure the production deployment too
-
