@@ -316,7 +316,7 @@ export default function PatientQueueCard() {
               {/* QR Code */}
               <div className="bg-white p-3 border border-slate-100 rounded-xl flex flex-col items-center gap-1.5 shadow-sm">
                 <QRCodeSVG
-                  value={`${typeof window !== "undefined" ? window.location.origin : ""}/q/${entry.tokenCode}`}
+                  value={`${process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "")}/q/${entry.tokenCode}`}
                   size={110}
                   level="H"
                 />

@@ -302,8 +302,12 @@ export default function CheckInKiosk() {
     }
   };
 
-  // Guard window access for SSR compatibility
-  const appOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  // Use the configured public URL so QR codes work when scanned on mobile.
+  // Falls back to window.location.origin only in local dev (won't work on LAN
+  // but is fine for desktop testing).
+  const appOrigin =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (typeof window !== "undefined" ? window.location.origin : "");
   const trackingUrl = receipt ? `${appOrigin}/q/${receipt.tokenCode}` : "";
   const inputClass =
     "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 font-semibold focus:outline-none focus:border-teal-500 focus:bg-white transition-all text-sm";
