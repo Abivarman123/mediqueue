@@ -175,6 +175,17 @@ export const getPatientLiveStatus = query({
     const activeConsultation = activeEntries.find((e) => e.status === "in_consultation");
     const currentCalling = activeEntries.find((e) => e.status === "called");
 
+    // Let's sort all queue entries by check-in time to find the absolute order
+    const sortedAll = [...allQueueEntries].sort((a, b) => a.checkInTime - b.checkInTime);
+    
+    const consultingIndex = activeConsultation
+      ? sortedAll.findIndex((e) => e._id === activeConsultation._id)
+      : -1;
+    const currentlyConsultingNumber = consultingIndex !== -1 ? consultingIndex + 1 : null;
+
+    const yourIndex = sortedAll.findIndex((e) => e._id === entry._id);
+    const yourCheckInNumber = yourIndex !== -1 ? yourIndex + 1 : null;
+
     return {
       entry: {
         id: entry._id,
@@ -208,7 +219,9 @@ export const getPatientLiveStatus = query({
         estimatedWaitMinutesMin,
         totalActiveQueue: activeEntries.length,
         currentlyConsultingName: activeConsultation ? activeConsultation.patientName : null,
+        currentlyConsultingNumber,
         currentlyCallingToken: currentCalling ? currentCalling.tokenCode : null,
+        yourCheckInNumber,
       },
     };
   },

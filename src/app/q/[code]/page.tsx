@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   Mail,
   Loader2,
-  Printer
+  Printer,
+  Stethoscope
 } from "lucide-react";
 
 // Lazy load QRCodeSVG to reduce initial bundle size
@@ -24,6 +25,12 @@ const QRCodeSVG = dynamic(() => import("qrcode.react").then(mod => mod.QRCodeSVG
   loading: () => <div className="w-[110px] h-[110px] bg-slate-200 rounded-lg animate-pulse" />,
   ssr: false
 });
+
+function getOrdinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
 
 export default function PatientQueueCard() {
   const params = useParams();
@@ -206,6 +213,16 @@ export default function PatientQueueCard() {
                   <CheckCircle2 className="w-12 h-12 text-teal-600" />
                   <span className="text-3xl font-extrabold text-slate-800">Visit Finalized</span>
                 </div>
+              ) : isConsulting ? (
+                <div className="flex items-center gap-3 py-4">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center animate-pulse border border-emerald-100">
+                    <Stethoscope className="w-6 h-6 animate-pulse" />
+                  </div>
+                  <div>
+                    <span className="text-2xl font-black text-emerald-800">You are in the room</span>
+                    <p className="text-xs text-slate-500 mt-0.5">Your consultation with {doctor.name} is in progress.</p>
+                  </div>
+                </div>
               ) : (
                 <div className="flex items-baseline gap-2 py-4">
                   <span className="text-7xl font-black text-slate-900 tracking-tight font-mono">
@@ -351,9 +368,16 @@ export default function PatientQueueCard() {
                 }`} />
                 <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wider">Doctor Consultation Room</h4>
                 {liveStats.currentlyConsultingName ? (
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Currently seeing: <strong className="text-slate-800 font-extrabold">{liveStats.currentlyConsultingName}</strong>
-                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                    <p className="text-xs text-slate-500">
+                      Currently seeing: <strong className="text-slate-800 font-extrabold">{liveStats.currentlyConsultingName}</strong>
+                    </p>
+                    {liveStats.currentlyConsultingNumber && (
+                      <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        {getOrdinal(liveStats.currentlyConsultingNumber)} Patient Today
+                      </span>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-xs text-slate-400 mt-0.5 italic">Consultation room currently idle</p>
                 )}
@@ -379,7 +403,11 @@ export default function PatientQueueCard() {
                 <span className="absolute -left-[30px] top-0.5 w-4 h-4 rounded-full border-2 border-white flex items-center justify-center bg-teal-500" />
                 <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wider">Your Position</h4>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  You are positioned <strong className="text-teal-600 font-extrabold">#{liveStats.currentPosition}</strong> in today&apos;s tracking list.
+                  You are positioned <strong className="text-teal-600 font-extrabold">#{liveStats.currentPosition}</strong> in today&apos;s tracking list
+                  {liveStats.yourCheckInNumber && (
+                    <span> (you were the <strong className="text-slate-700 font-bold">{getOrdinal(liveStats.yourCheckInNumber)}</strong> check-in today)</span>
+                  )}
+                  .
                 </p>
               </div>
 
